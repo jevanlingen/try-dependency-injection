@@ -1,12 +1,28 @@
-# Try Dependency Injection
+# Try Dependency Injection & Events
 
-Welcome to this GitHub repository dedicated to learning a simple dependency injection.
-Here, you'll find a collection of Java classes demonstrating how you could create your own dependency injection.
+Welcome to this educational repository designed to demystify the core mechanics of Dependency Injection (DI) and Event-Driven Architecture in Java.
+This project demonstrates how modern frameworks (like Spring or Micronaut) use annotations and reflection to automate object lifecycle management and service communication.
 
-Note that this is a very basic implementation just for demonstration purposes. It now also includes a simple, **asynchronous event-based system**:
-- **`@EventListener`**: Annotate methods to automatically register them as event listeners.
-- **`EventBus`**: A centralized, type-aware bus that dispatches events to the correct listeners on separate threads.
-- **Decoupled Communication**: Services can publish events without knowing who is listening, ensuring a non-blocking flow.
+## Key Features
 
-This implementation is still simplified and doesn't handle more advanced scenarios like circular dependencies or handling different scopes for dependencies.
-It's important to keep in mind that building a robust and production-ready dependency injection framework requires a lot more consideration and features.
+### 1. Annotation-Based DI
+The project implements a custom DI container that automatically instantiates and wires beans using:
+- **Stereotype Annotations**: `@Service`, `@Repository`, `@RestController`, `@Bean`, and `@Configuration`.
+- **Automatic Constructor Injection**: Dependencies are resolved and injected into constructors automatically during startup.
+- **Service Discovery**: Uses the `reflections` library to scan the classpath for annotated classes.
+
+### 2. Asynchronous Event System
+A fully decoupled communication layer that allows services to interact without direct dependencies:
+- **`@EventListener`**: A custom annotation to mark methods that handle specific events.
+- **Type-Aware EventBus**: A centralized bus that ensures events are only delivered to listeners with matching method signatures.
+- **Non-Blocking Execution**: Built on a `CachedThreadPool`, ensuring that event publishing and processing happen on separate threads.
+
+## How it Works
+1. **Scanning**: On startup, the `Startup` class scans the `com.di` package for suitable classes.
+2. **Dependency Resolution**: A custom initialization loop resolves the dependency graph, ensuring beans are created in the correct order.
+3. **Event Registration**: Once beans are initialized, the container scans for `@EventListener` methods and registers them with the `EventBus`.
+4. **Lifecycle**: The application remains active, allowing the asynchronous event flow to continue indefinitely.
+
+---
+
+*Note: This is a simplified implementation for learning purposes. It focuses on clarity rather than handling advanced scenarios like circular dependencies, scoped beans (Prototype/Request), or complex proxying.*
