@@ -3,8 +3,8 @@ package com.di.exampleapp.service;
 import com.di.annotations.EventListener;
 import com.di.annotations.Service;
 import com.di.architecture.EventBus;
-import com.di.model.ExampleEvent;
-import com.di.model.ExampleEvent2;
+import com.di.model.DataEvent;
+import com.di.model.MessageEvent;
 
 @Service
 public class SecondEventListenerService {
@@ -15,12 +15,12 @@ public class SecondEventListenerService {
     }
 
     @EventListener
-    public void handle(ExampleEvent2 event) {
-        System.out.println("SecondEventListenerService received ExampleEvent2: " + event.message());
+    public void handle(MessageEvent event) {
+        System.out.println("SecondEventListenerService received MessageEvent: " + event.message());
 
         try {
             Thread.sleep((long) (Math.random() * 1000));
-            eventBus.publish(new ExampleEvent("Event 1 data at " + System.currentTimeMillis()));
+            eventBus.publish(new DataEvent("Data Event at " + System.currentTimeMillis()));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

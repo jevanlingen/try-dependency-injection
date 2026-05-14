@@ -1,6 +1,6 @@
 import com.di.annotations.*;
 import com.di.architecture.EventBus;
-import com.di.model.ExampleEvent;
+import com.di.model.DataEvent;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
@@ -38,17 +38,19 @@ private static Map<Class<?>, Object> initializeClasses() throws InvocationTarget
 }
 
 private static void initializedEventBus(Map<Class<?>, Object> initializedBeans) {
-    EventBus eventBus = (EventBus) initializedBeans.get(EventBus.class);
+    final var eventBus = (EventBus) initializedBeans.get(EventBus.class);
     if (eventBus != null) {
         for (Object bean : initializedBeans.values()) {
-            for (Method method : bean.getClass().getDeclaredMethods()) {
-                if (method.isAnnotationPresent(EventListener.class)) {
-                    eventBus.register(bean, method);
-                }
+            final var eventListeners = Arrays.stream(bean.getClass().getDeclaredMethods())
+                    .filter(method -> method.isAnnotationPresent(EventListener.class))
+                    .toArray(Method[]::new);
+
+            if (eventListeners.length > 0) {
+                eventBus.register(bean, eventListeners);
             }
         }
 
-        eventBus.publish(new ExampleEvent("Start the event flow..."));
+        eventBus.publish(new DataEvent("Start the event flow..."));
     }
 }
 
