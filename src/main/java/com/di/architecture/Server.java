@@ -1,60 +1,44 @@
 package com.di.architecture;
 
 import com.di.annotations.Configuration;
-import com.di.annotations.RestController;
 import com.di.annotations.http.GET;
 import com.di.annotations.http.POST;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 public class Server {
     private static int PORT_NUMBER = 8080;
 
-    private final Map<String, Route> routes = new HashMap<>();
+    private final List<Route> routes = new ArrayList<>();
 
     public void registerRoute(Object bean, Method... methods) {
         for (var method : methods) {
+            String httpMethod = null;
+            String path = null;
             if (method.isAnnotationPresent(GET.class)) {
-                String path = method.getAnnotation(GET.class).value();
-                routes.put("GET " + path, new Route(bean, method));
-                System.out.println("Registered route: GET " + path);
+                httpMethod = "GET";
+                path = method.getAnnotation(GET.class).value();
             } else if (method.isAnnotationPresent(POST.class)) {
-                String path = method.getAnnotation(POST.class).value();
-                routes.put("POST " + path, new Route(bean, method));
-                System.out.println("Registered route: POST " + path);
+                httpMethod = "POST";
+                path = method.getAnnotation(POST.class).value();
+            }
+
+            if (httpMethod != null) {
+                routes.add(new Route(httpMethod, path, bean, method));
+                System.out.println("Registered route: " + httpMethod + " " + path);
             }
         }
     }
 
     public void run() {
-        //Map<String, Route> routes = new HashMap<>();
-
-//        for (Object bean : beans.values()) {
-//            if (bean.getClass().isAnnotationPresent(RestController.class)) {
-//                for (Method method : bean.getClass().getDeclaredMethods()) {
-//                    if (method.isAnnotationPresent(GET.class)) {
-//                        String path = method.getAnnotation(GET.class).value();
-//                        routes.put("GET " + path, new Route(bean, method));
-//                        System.out.println("Registered route: GET " + path);
-//                    } else if (method.isAnnotationPresent(POST.class)) {
-//                        String path = method.getAnnotation(POST.class).value();
-//                        routes.put("POST " + path, new Route(bean, method));
-//                        System.out.println("Registered route: POST " + path);
-//                    }
-//                }
-//            }
-//        }
-
         try (ServerSocket server = new ServerSocket(PORT_NUMBER)) {
             System.out.println("Listening on http://localhost:8080");
 
@@ -63,7 +47,6 @@ public class Server {
                     final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     final var out = socket.getOutputStream();
 
-                    // Read request line
                     var line = in.readLine();
                     if (line == null || line.isEmpty()) continue;
 
@@ -72,19 +55,18 @@ public class Server {
                     String httpMethod = requestParts[0];
                     String path = requestParts[1];
 
-                    // Consume remaining headers
-                    while (!(line = in.readLine()).isEmpty()) {
-                        // Just consume
-                    }
+                    while (!(line = in.readLine()).isEmpty()) { }
 
-                    Route route = routes.get(httpMethod + " " + path);
                     String body;
                     int statusCode = 200;
                     String statusText = "OK";
 
-                    if (route != null) {
+                    MatchedRoute matched = findRoute(httpMethod, path);
+
+                    if (matched != null) {
                         try {
-                            Object result = route.method().invoke(route.bean());
+                            Object[] args = convertArgs(matched.route().method(), matched.params());
+                            Object result = matched.route().method().invoke(matched.route().bean(), args);
                             body = result != null ? result.toString() : "";
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -116,5 +98,48 @@ public class Server {
         }
     }
 
-    private record Route(Object bean, Method method) {}
+    private MatchedRoute findRoute(String httpMethod, String path) {
+        String[] pathSegments = path.split("/");
+        for (Route route : routes) {
+            if (!route.httpMethod().equals(httpMethod)) continue;
+            
+            String[] routeSegments = route.path().split("/");
+            if (pathSegments.length != routeSegments.length) continue;
+
+            List<String> params = new ArrayList<>();
+            boolean match = true;
+            for (int i = 0; i < routeSegments.length; i++) {
+                if (routeSegments[i].startsWith("{") && routeSegments[i].endsWith("}")) {
+                    params.add(pathSegments[i]);
+                } else if (!routeSegments[i].equals(pathSegments[i])) {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match) {
+                return new MatchedRoute(route, params);
+            }
+        }
+        return null;
+    }
+
+    private Object[] convertArgs(Method method, List<String> params) {
+        Class<?>[] paramTypes = method.getParameterTypes();
+        Object[] args = new Object[paramTypes.length];
+        for (int i = 0; i < paramTypes.length; i++) {
+            if (i < params.size()) {
+                String val = params.get(i);
+                if (paramTypes[i] == int.class || paramTypes[i] == Integer.class) {
+                    args[i] = Integer.parseInt(val);
+                } else {
+                    args[i] = val;
+                }
+            }
+        }
+        return args;
+    }
+
+    private record Route(String httpMethod, String path, Object bean, Method method) {}
+    private record MatchedRoute(Route route, List<String> params) {}
 }

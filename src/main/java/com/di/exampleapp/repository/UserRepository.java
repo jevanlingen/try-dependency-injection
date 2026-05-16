@@ -20,8 +20,9 @@ public class UserRepository {
                 .orElse(null);
     }
 
-    public void save(User user) {
+    public User save(User user) {
         final var user_ = new User(users.getLast().id() + 1, user.name());
         users.add(user_);
+        return user_;
     }
 }

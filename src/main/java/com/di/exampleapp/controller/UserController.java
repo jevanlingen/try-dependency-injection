@@ -25,9 +25,9 @@ public class UserController {
         return userService.getAll();
     }
 
-    @GET("/user/1")
-    public User getUser() {
-        return userService.getUser(1);
+    @GET("/user/{id}")
+    public User getUser(int id) {
+        return userService.getUser(id);
     }
 
     @POST("/user")
