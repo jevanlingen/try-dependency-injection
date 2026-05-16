@@ -1,7 +1,6 @@
-# Try Dependency Injection & Events
+# MiniFramework: Educational DI & Web Framework
 
-Welcome to this educational repository designed to demystify the core mechanics of Dependency Injection (DI) and Event-Driven Architecture in Java.
-This project demonstrates how modern frameworks (like Spring or Micronaut) use annotations and reflection to automate object lifecycle management and service communication.
+Welcome to **MiniFramework**, a lightweight, "from-scratch" Java framework designed to demystify the core mechanics of modern application development. This project evolved from a simple Dependency Injection exercise into a small, functional framework that demonstrates how annotations, reflection, and low-level networking can be combined to automate object lifecycle management, event-driven communication, and HTTP routing.
 
 ## Key Features
 
@@ -18,9 +17,23 @@ A fully decoupled communication layer that allows services to interact without d
 - **Non-Blocking Execution**: Built on a `CachedThreadPool`, ensuring that event publishing and processing happen on separate threads.
 
 ### 3. Lightweight HTTP Server
-A simple server implementation that demonstrates infrastructure bootstrapping:
+A simple server implementation that demonstrates infrastructure bootstrapping and request routing:
 - **Low-Level Socket Handling**: Shows how a basic HTTP server can be built using standard Java `ServerSocket`.
-- **DI Integration**: The server is managed as a bean within the DI container, showcasing how lifecycle management extends to infrastructure.
+- **Dynamic Routing**: Supports path parameters using `{}` placeholders (e.g., `@GET("/user/{id}")`).
+- **Positional Parameter Mapping**: Automatically maps path segments to method arguments by position, with basic type conversion for `int` and `String`.
+- **DI Integration**: The server is managed as a bean within the DI container, invoking methods on `@RestController` beans that have been injected with their required services.
+
+## Example Application
+The `com.di.exampleapp` package contains a vertical slice demonstrating the full stack:
+- **`UserController`**: Handles HTTP requests and uses `@GET` and `@POST` annotations.
+- **`UserService`**: Contains business logic and orchestrates data flow.
+- **`UserRepository`**: Manages an in-memory list of `User` records.
+- **`User` model**: A simple record used to demonstrate data transfer through the layers.
+
+Example interaction:
+- `GET /user` -> Returns a list of all users.
+- `GET /user/1` -> Returns the user with ID 1.
+- `POST /user` -> Creates a new user and returns it with a generated ID.
 
 ## How it Works
 The startup process is divided into two distinct phases:
