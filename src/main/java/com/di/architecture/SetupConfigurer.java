@@ -16,12 +16,12 @@ public class SetupConfigurer {
             final var initializedBeans = initializeClasses();
 
             if (enableEvents) {
-                initializeEventBus(initializedBeans, enableEventExampleFlow);
+                initializeEventBus(initializedBeans, enableEventExampleFlow, enableServer);
             }
             if (enableServer) {
                 runServer(initializedBeans);
             }
-        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -49,7 +49,7 @@ public class SetupConfigurer {
         return initializedClasses;
     }
 
-    private static void initializeEventBus(Map<Class<?>, Object> initializedBeans, boolean enableEventExampleFlow) {
+    private static void initializeEventBus(Map<Class<?>, Object> initializedBeans, boolean enableEventExampleFlow, boolean enableServer) throws InterruptedException {
         final var eventBus = (EventBus) initializedBeans.get(EventBus.class);
         if (eventBus != null) {
             for (Object bean : initializedBeans.values()) {
@@ -64,6 +64,13 @@ public class SetupConfigurer {
 
             if (enableEventExampleFlow) {
                 eventBus.publish(new DataEvent("Start the event flow..."));
+
+                if (!enableServer) {
+                    // Stay alive
+                    while (true) {
+                        Thread.sleep(1000);
+                    }
+                }
             }
         }
     }

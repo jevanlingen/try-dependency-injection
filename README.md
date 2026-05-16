@@ -17,11 +17,30 @@ A fully decoupled communication layer that allows services to interact without d
 - **Type-Aware EventBus**: A centralized bus that ensures events are only delivered to listeners with matching method signatures.
 - **Non-Blocking Execution**: Built on a `CachedThreadPool`, ensuring that event publishing and processing happen on separate threads.
 
+### 3. Lightweight HTTP Server
+A simple server implementation that demonstrates infrastructure bootstrapping:
+- **Low-Level Socket Handling**: Shows how a basic HTTP server can be built using standard Java `ServerSocket`.
+- **DI Integration**: The server is managed as a bean within the DI container, showcasing how lifecycle management extends to infrastructure.
+
 ## How it Works
-1. **Scanning**: On startup, the `Startup` class scans the `com.di` package for suitable classes.
-2. **Dependency Resolution**: A custom initialization loop resolves the dependency graph, ensuring beans are created in the correct order.
-3. **Event Registration**: Once beans are initialized, the container scans for `@EventListener` methods and registers them with the `EventBus`.
-4. **Lifecycle**: The application remains active, allowing the asynchronous event flow to continue indefinitely.
+The startup process is divided into two distinct phases:
+
+### Phase 1: The DI Container
+1. **Scanning**: The `SetupConfigurer` scans the `com.di` package to identify all classes marked with stereotype annotations.
+2. **Dependency Resolution**: A custom initialization loop resolves the dependency graph, instantiating beans and injecting their dependencies via constructors.
+
+### Phase 2: Feature Bootstrapping
+Depending on the flags in `Startup.java`, the following steps are performed:
+1. **Event Registration**: If `ENABLE_EVENTS` is active, the container scans the initialized beans for `@EventListener` methods and wires them to the `EventBus`.
+2. **Infrastructure Startup**: If `ENABLE_SERVER` is active, the `Server` bean is launched on port 8080.
+3. **Continuous Execution**: The application stays alive, allowing the asynchronous event system and HTTP server to handle incoming traffic and internal communication.
+
+## Configuration
+The application behavior can be toggled in the `Startup.java` class using the following flags:
+
+- **`ENABLE_EVENTS`**: Enables the initialization of the `EventBus` and registration of `@EventListener` methods.
+- **`ENABLE_EVENT_EXAMPLE_FLOW`**: If events are enabled, this triggers an initial `DataEvent` to demonstrate the asynchronous flow.
+- **`ENABLE_SERVER`**: Starts the internal HTTP server on port 8080.
 
 ---
 
