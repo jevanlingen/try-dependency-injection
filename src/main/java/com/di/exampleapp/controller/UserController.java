@@ -5,6 +5,9 @@ import com.di.annotations.http.GET;
 import com.di.annotations.http.POST;
 import com.di.exampleapp.service.AuthenticationService;
 import com.di.exampleapp.service.UserService;
+import com.di.model.User;
+
+import java.util.List;
 
 @RestController
 public class UserController {
@@ -17,13 +20,18 @@ public class UserController {
         this.authenticationService = authenticationService;
     }
 
+    @GET("/user")
+    public List<User> getUsers() {
+        return userService.getAll();
+    }
+
     @GET("/user/1")
-    public String getUser() {
-        return "User with ID 1";
+    public User getUser() {
+        return userService.getUser(1);
     }
 
     @POST("/user")
-    public String createUser() {
-        return "User created";
+    public User createUser() {
+        return userService.createUser("New User");
     }
 }
