@@ -1,10 +1,13 @@
+package com.di;
+
 import com.di.architecture.SetupConfigurer;
 
-void main() throws InterruptedException {
-    SetupConfigurer.configure();
+class Startup {
+    private static boolean ENABLE_EVENTS = true;
+    private static boolean ENABLE_EVENT_EXAMPLE_FLOW = false;
+    private static boolean ENABLE_SERVER = true;
 
-    // Stay alive
-    while (true) {
-        Thread.sleep(1000);
+    void main() {
+        SetupConfigurer.configure(ENABLE_EVENTS, ENABLE_EVENT_EXAMPLE_FLOW, ENABLE_SERVER);
     }
 }

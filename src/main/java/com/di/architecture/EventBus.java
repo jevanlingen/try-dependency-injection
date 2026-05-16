@@ -1,13 +1,13 @@
 package com.di.architecture;
 
-import com.di.annotations.Service;
+import com.di.annotations.Configuration;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Service
+@Configuration
 public class EventBus {
     private final List<EventListenerInvoker> invokers = new ArrayList<>();
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();

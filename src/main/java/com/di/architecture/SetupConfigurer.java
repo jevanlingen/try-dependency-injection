@@ -11,14 +11,19 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 public class SetupConfigurer {
-    public static void configure() {
+    public static void configure(boolean enableEvents, boolean enableEventExampleFlow, boolean enableServer) {
         try {
             final var initializedBeans = initializeClasses();
-            initializedEventBus(initializedBeans);
+
+            if (enableEvents) {
+                initializeEventBus(initializedBeans, enableEventExampleFlow);
+            }
+            if (enableServer) {
+                runServer(initializedBeans);
+            }
         } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     private static Map<Class<?>, Object> initializeClasses() throws InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -44,7 +49,7 @@ public class SetupConfigurer {
         return initializedClasses;
     }
 
-    private static void initializedEventBus(Map<Class<?>, Object> initializedBeans) {
+    private static void initializeEventBus(Map<Class<?>, Object> initializedBeans, boolean enableEventExampleFlow) {
         final var eventBus = (EventBus) initializedBeans.get(EventBus.class);
         if (eventBus != null) {
             for (Object bean : initializedBeans.values()) {
@@ -57,8 +62,14 @@ public class SetupConfigurer {
                 }
             }
 
-            eventBus.publish(new DataEvent("Start the event flow..."));
+            if (enableEventExampleFlow) {
+                eventBus.publish(new DataEvent("Start the event flow..."));
+            }
         }
+    }
+
+    private static void runServer(Map<Class<?>, Object> initializedBeans) {
+        ((Server) initializedBeans.get(Server.class)).run();
     }
 
     private static List<Class<?>> getSuitableClasses() {
