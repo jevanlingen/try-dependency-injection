@@ -1,66 +1,10 @@
-import com.di.annotations.*;
-import com.di.architecture.EventBus;
-import com.di.model.DataEvent;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
+import com.di.architecture.SetupConfigurer;
 
-void main() throws InvocationTargetException, InstantiationException, IllegalAccessException, InterruptedException {
-    final var initializedBeans = initializeClasses();
-    initializedEventBus(initializedBeans);
+void main() throws InterruptedException {
+    SetupConfigurer.configure();
 
     // Stay alive
     while (true) {
         Thread.sleep(1000);
     }
-}
-
-private static Map<Class<?>, Object> initializeClasses() throws InvocationTargetException, InstantiationException, IllegalAccessException {
-    final var suitableClasses = new ArrayList<>(getSuitableClasses());
-    final var initializedClasses = new HashMap<Class<?>, Object>();
-
-    while (initializedClasses.size() != suitableClasses.size()) {
-        for (final var clazz : suitableClasses.stream().filter(it -> !initializedClasses.containsKey(it)).toList()) {
-            final var constructor = clazz.getDeclaredConstructors()[0];
-            final var dependencies = Arrays.stream(constructor.getParameters())
-                    .map(it -> initializedClasses.get(it.getType()))
-                    .filter(Objects::nonNull)
-                    .toList();
-
-            if (constructor.getParameterCount() == dependencies.size()) {
-                System.out.printf("Bean `%s` loaded. External dependencies: %s%n", clazz.getCanonicalName(), dependencies.stream().map(it -> it.getClass().getCanonicalName()).toList());
-                initializedClasses.put(clazz, constructor.newInstance(dependencies.toArray()));
-            }
-        }
-    }
-
-    IO.println("All classes loaded");
-    return initializedClasses;
-}
-
-private static void initializedEventBus(Map<Class<?>, Object> initializedBeans) {
-    final var eventBus = (EventBus) initializedBeans.get(EventBus.class);
-    if (eventBus != null) {
-        for (Object bean : initializedBeans.values()) {
-            final var eventListeners = Arrays.stream(bean.getClass().getDeclaredMethods())
-                    .filter(method -> method.isAnnotationPresent(EventListener.class))
-                    .toArray(Method[]::new);
-
-            if (eventListeners.length > 0) {
-                eventBus.register(bean, eventListeners);
-            }
-        }
-
-        eventBus.publish(new DataEvent("Start the event flow..."));
-    }
-}
-
-private static List<Class<?>> getSuitableClasses() {
-    return new Reflections("com.di", new SubTypesScanner(false))
-            .getSubTypesOf(Object.class).stream()
-            .filter(it -> it.isAnnotationPresent(Bean.class) ||
-                          it.isAnnotationPresent(Configuration.class) ||
-                          it.isAnnotationPresent(Repository.class) ||
-                          it.isAnnotationPresent(RestController.class) ||
-                          it.isAnnotationPresent(Service.class))
-            .toList();
 }
