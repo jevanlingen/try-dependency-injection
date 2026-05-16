@@ -2,6 +2,8 @@ package com.di.architecture;
 
 import com.di.annotations.*;
 import com.di.annotations.EventListener;
+import com.di.annotations.http.GET;
+import com.di.annotations.http.POST;
 import com.di.model.DataEvent;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
@@ -19,7 +21,7 @@ public class SetupConfigurer {
                 initializeEventBus(initializedBeans, enableEventExampleFlow, enableServer);
             }
             if (enableServer) {
-                runServer(initializedBeans);
+                initializeAndRunServer(initializedBeans);
             }
         } catch (InvocationTargetException | IllegalAccessException | InstantiationException | InterruptedException e) {
             throw new RuntimeException(e);
@@ -75,8 +77,19 @@ public class SetupConfigurer {
         }
     }
 
-    private static void runServer(Map<Class<?>, Object> initializedBeans) {
-        ((Server) initializedBeans.get(Server.class)).run();
+    private static void initializeAndRunServer(Map<Class<?>, Object> initializedBeans) {
+        var server = (Server) initializedBeans.get(Server.class);
+
+        for (Object bean : initializedBeans.values()) {
+            if (bean.getClass().isAnnotationPresent(RestController.class)) {
+                final var methods = Arrays.stream(bean.getClass().getDeclaredMethods())
+                        .filter(method -> method.isAnnotationPresent(GET.class) || method.isAnnotationPresent(POST.class))
+                        .toArray(Method[]::new);
+                server.registerRoute(bean, methods);
+            }
+        }
+
+        server.run();
     }
 
     private static List<Class<?>> getSuitableClasses() {
