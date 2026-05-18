@@ -10,6 +10,6 @@ import java.time.LocalDateTime;
 public class EventLoggerService {
     @EventListener
     public void onEvent(Event event) {
-        System.out.println("Event: " + event + " sent at " + LocalDateTime.now());
+        System.out.println("Event: " + event);
     }
 }
