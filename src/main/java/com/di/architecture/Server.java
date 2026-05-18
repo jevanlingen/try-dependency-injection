@@ -12,6 +12,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Configuration
 public class Server {
@@ -51,22 +52,22 @@ public class Server {
                     if (line == null || line.isEmpty()) continue;
 
                     System.out.println("Request: " + line);
-                    String[] requestParts = line.split(" ");
-                    String httpMethod = requestParts[0];
-                    String path = requestParts[1];
+                    final var requestParts = line.split(" ");
+                    final var httpMethod = requestParts[0];
+                    final var path = requestParts[1];
 
                     while (!(line = in.readLine()).isEmpty()) { }
 
                     String body;
-                    int statusCode = 200;
-                    String statusText = "OK";
+                    var statusCode = 200;
+                    var statusText = "OK";
 
                     MatchedRoute matched = findRoute(httpMethod, path);
 
                     if (matched != null) {
                         try {
-                            Object[] args = convertArgs(matched.route().method(), matched.params());
-                            Object result = matched.route().method().invoke(matched.route().bean(), args);
+                            final var args = convertArgs(matched.route().method(), matched.params());
+                            final var result = matched.route().method().invoke(matched.route().bean(), args);
                             body = result != null ? result.toString() : "";
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -99,15 +100,15 @@ public class Server {
     }
 
     private MatchedRoute findRoute(String httpMethod, String path) {
-        String[] pathSegments = path.split("/");
+        final var pathSegments = path.split("/");
         for (Route route : routes) {
             if (!route.httpMethod().equals(httpMethod)) continue;
             
-            String[] routeSegments = route.path().split("/");
+            final var routeSegments = route.path().split("/");
             if (pathSegments.length != routeSegments.length) continue;
 
-            List<String> params = new ArrayList<>();
-            boolean match = true;
+            final var params = new ArrayList<String>();
+            var match = true;
             for (int i = 0; i < routeSegments.length; i++) {
                 if (routeSegments[i].startsWith("{") && routeSegments[i].endsWith("}")) {
                     params.add(pathSegments[i]);
@@ -125,19 +126,15 @@ public class Server {
     }
 
     private Object[] convertArgs(Method method, List<String> params) {
-        Class<?>[] paramTypes = method.getParameterTypes();
-        Object[] args = new Object[paramTypes.length];
-        for (int i = 0; i < paramTypes.length; i++) {
-            if (i < params.size()) {
-                String val = params.get(i);
-                if (paramTypes[i] == int.class || paramTypes[i] == Integer.class) {
-                    args[i] = Integer.parseInt(val);
-                } else {
-                    args[i] = val;
-                }
-            }
-        }
-        return args;
+        final var paramTypes = method.getParameterTypes();
+        return IntStream.range(0, paramTypes.length)
+                .mapToObj(i -> {
+                    if (paramTypes[i] == int.class || paramTypes[i] == Integer.class) {
+                        return Integer.parseInt(params.get(i));
+                    }
+                    return params.get(i);
+                })
+                .toArray();
     }
 
     private record Route(String httpMethod, String path, Object bean, Method method) {}
