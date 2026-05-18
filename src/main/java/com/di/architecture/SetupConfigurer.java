@@ -23,7 +23,7 @@ public class SetupConfigurer {
     }
 
     private static Map<Class<?>, Object> initializeClasses() throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        final var suitableClasses = new ArrayList<>(getSuitableClasses());
+        final var suitableClasses = getSuitableClasses();
         final var initializedClasses = new HashMap<Class<?>, Object>();
 
         while (initializedClasses.size() != suitableClasses.size()) {
@@ -75,15 +75,17 @@ public class SetupConfigurer {
         server.run();
     }
 
-    private static List<Class<?>> getSuitableClasses() {
-        return new Reflections("com.di", Scanners.SubTypes.filterResultsBy(s -> true))
-                .getSubTypesOf(Object.class).stream()
-                .filter(it -> it.isAnnotationPresent(Bean.class) ||
-                              it.isAnnotationPresent(Configuration.class) ||
-                              it.isAnnotationPresent(Repository.class) ||
-                              it.isAnnotationPresent(RestController.class) ||
-                              it.isAnnotationPresent(Service.class))
-                .toList();
+    private static Set<Class<?>> getSuitableClasses() {
+        var reflections = new Reflections("com.di", Scanners.TypesAnnotated);
+
+        final var classes = reflections.getTypesAnnotatedWith(Bean.class);
+        classes.addAll(reflections.getTypesAnnotatedWith(Bean.class));
+        classes.addAll(reflections.getTypesAnnotatedWith(Configuration.class));
+        classes.addAll(reflections.getTypesAnnotatedWith(Repository.class));
+        classes.addAll(reflections.getTypesAnnotatedWith(RestController.class));
+        classes.addAll(reflections.getTypesAnnotatedWith(Service.class));
+
+        return classes;
     }
 
 }
