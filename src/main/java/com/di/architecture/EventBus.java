@@ -1,6 +1,8 @@
 package com.di.architecture;
 
 import com.di.annotations.Configuration;
+import com.di.model.events.Event;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ public class EventBus {
         invokers.add(new EventListenerInvoker(bean, eventListeners));
     }
 
-    public void publish(Object event) {
+    public void publish(Event event) {
         invokers.forEach(it -> executorService.submit(() -> it.invoke(event)));
     }
 

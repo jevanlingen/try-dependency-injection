@@ -22,16 +22,19 @@ public class UserController {
 
     @GET("/user")
     public List<User> getUsers() {
+        // audit event
         return userService.getAll();
     }
 
     @GET("/user/{id}")
     public User getUser(int id) {
+        // audit event
         return userService.getUser(id);
     }
 
     @POST("/user")
     public User createUser() {
+        // audit event
         return userService.createUser("New User");
     }
 }

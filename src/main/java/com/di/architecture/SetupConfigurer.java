@@ -4,7 +4,6 @@ import com.di.annotations.*;
 import com.di.annotations.EventListener;
 import com.di.annotations.http.GET;
 import com.di.annotations.http.POST;
-import com.di.model.DataEvent;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
@@ -13,17 +12,12 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 public class SetupConfigurer {
-    public static void configure(boolean enableEvents, boolean enableEventExampleFlow, boolean enableServer) {
+    public static void configure() {
         try {
             final var initializedBeans = initializeClasses();
-
-            if (enableEvents) {
-                initializeEventBus(initializedBeans, enableEventExampleFlow, enableServer);
-            }
-            if (enableServer) {
-                initializeAndRunServer(initializedBeans);
-            }
-        } catch (InvocationTargetException | IllegalAccessException | InstantiationException | InterruptedException e) {
+            initializeEventBus(initializedBeans);
+            initializeAndRunServer(initializedBeans);
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         }
     }
@@ -51,7 +45,7 @@ public class SetupConfigurer {
         return initializedClasses;
     }
 
-    private static void initializeEventBus(Map<Class<?>, Object> initializedBeans, boolean enableEventExampleFlow, boolean enableServer) throws InterruptedException {
+    private static void initializeEventBus(Map<Class<?>, Object> initializedBeans) {
         final var eventBus = (EventBus) initializedBeans.get(EventBus.class);
         if (eventBus != null) {
             for (Object bean : initializedBeans.values()) {
@@ -61,17 +55,6 @@ public class SetupConfigurer {
 
                 if (eventListeners.length > 0) {
                     eventBus.register(bean, eventListeners);
-                }
-            }
-
-            if (enableEventExampleFlow) {
-                eventBus.publish(new DataEvent("Start the event flow..."));
-
-                if (!enableServer) {
-                    // Stay alive
-                    while (true) {
-                        Thread.sleep(1000);
-                    }
                 }
             }
         }

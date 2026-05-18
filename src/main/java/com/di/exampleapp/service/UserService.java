@@ -1,8 +1,10 @@
 package com.di.exampleapp.service;
 
 import com.di.annotations.Service;
+import com.di.architecture.EventBus;
 import com.di.exampleapp.repository.UserRepository;
 import com.di.model.User;
+import com.di.model.events.UserCreated;
 
 import java.util.List;
 
@@ -10,9 +12,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final EventBus eventBus;
 
-    public UserService(final UserRepository userRepository) {
+    public UserService(final UserRepository userRepository, EventBus eventBus) {
         this.userRepository = userRepository;
+        this.eventBus = eventBus;
     }
 
     public List<User> getAll() {
@@ -24,7 +28,9 @@ public class UserService {
     }
 
     public User createUser(String name) {
-        User newUser = new User(null, name);
-        return userRepository.save(newUser);
+        final var newUser = userRepository.save(new User(null, name));
+        eventBus.publish(new UserCreated(newUser));
+
+        return newUser;
     }
 }

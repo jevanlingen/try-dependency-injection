@@ -1,4 +1,4 @@
-package com.di.model;
+package com.di.model.events;
 
 public interface Event {
 
