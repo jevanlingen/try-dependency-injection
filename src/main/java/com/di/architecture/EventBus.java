@@ -23,7 +23,7 @@ public class EventBus {
     }
 
     private record EventListenerInvoker(Object bean, Method... eventListeners) {
-        void invoke(Object event) {
+        void invoke(Event event) {
             for (var method : eventListeners) {
                 // Check if the event type matches the listener's first parameter type
                 if (method.getParameterCount() == 1 && method.getParameterTypes()[0].isAssignableFrom(event.getClass())) {
