@@ -5,7 +5,7 @@ import com.di.annotations.EventListener;
 import com.di.annotations.http.GET;
 import com.di.annotations.http.POST;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.Scanners;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -76,7 +76,7 @@ public class SetupConfigurer {
     }
 
     private static List<Class<?>> getSuitableClasses() {
-        return new Reflections("com.di", new SubTypesScanner(false))
+        return new Reflections("com.di", Scanners.SubTypes.filterResultsBy(s -> true))
                 .getSubTypesOf(Object.class).stream()
                 .filter(it -> it.isAnnotationPresent(Bean.class) ||
                               it.isAnnotationPresent(Configuration.class) ||
