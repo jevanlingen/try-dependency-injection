@@ -76,7 +76,7 @@ public class SetupConfigurer {
     }
 
     private static Set<Class<?>> getSuitableClasses() {
-        var reflections = new Reflections("com.di", Scanners.TypesAnnotated);
+        final var reflections = new Reflections("com.di", Scanners.TypesAnnotated);
 
         final var classes = reflections.getTypesAnnotatedWith(Bean.class);
         classes.addAll(reflections.getTypesAnnotatedWith(Bean.class));
